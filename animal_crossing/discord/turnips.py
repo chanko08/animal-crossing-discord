@@ -1,7 +1,7 @@
 from discord.ext import commands
 from animal_crossing.discord.argparse import DiscordArgumentParser, discord_argparse
 import textwrap
-import turnips
+import animal_crossing.turnips as turnips
 
 
 
