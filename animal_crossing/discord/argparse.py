@@ -1,24 +1,28 @@
 import argparse
+from contextlib import redirect_stdout, redirect_stderr
+import io
+import sys
 
 class DiscordArgumentParserException(Exception):
-    def __init__(self, argp, message):
-        self.argp = argp
-        self.message = message
+    def __init__(self, status, messages):
+        self.status = status
+        self.messages = messages
+    
+    async def send_message(self, ctx):
+        message = "\n".join(self.messages)
+        await ctx.message.channel.send(f"```\n{message}\n```")
+        
 
 class DiscordArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        raise DiscordArgumentParserException(self, message)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.messages = []
 
-async def discord_argparse(argp, ctx, arg_string):
-    try:
-        args = argp.parse_args([x.strip() for x in arg_string.split()])
+    def _print_message(self, message, file=None):
+        self.messages.append(message)
 
-    except DiscordArgumentParserException as e:
-        msg = "```\n"
-        msg += e.argp.format_usage()
-        msg += e.message
-        msg += "```"
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message)
 
-        await ctx.message.channel.send(msg)
-        return None
-    return args
+        raise DiscordArgumentParserException(status, self.messages)
